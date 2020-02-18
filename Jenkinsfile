@@ -1,42 +1,30 @@
-node
-{
+pipeline {
+   agent any /*'prod node'*/
 
-  def mavenHome=tool name: "maven3.6.3"
-  
- stage('Checkout')
- {
- 	git branch: 'development', credentialsId: 'bed5a851-d84d-412e-87e7-bf9ce23c0e0e', url: 'https://github.com/MithunTechnologiesDevOps/maven-web-application.git'
- 
- }
- /*
- stage('Build')
- {
- sh  "${mavenHome}/bin/mvn clean package"
- }
- 
- stage('ExecuteSoanrQubeReport')
- {
- sh  "${mavenHome}/bin/mvn sonar:sonar"
- }
- 
- stage('UploadArtifactintoNexus')
- {
- sh  "${mavenHome}/bin/mvn deploy"
- }
- 
- stage('DeployAppintoTomcat')
- {
- sshagent(['cd93d61f-2d0f-4c60-8b33-34cf4fa888b0']) {
-  sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@13.235.132.183:/opt/apache-tomcat-9.0.29/webapps/"
- }
- }
-*/
- stage('SendEmailNotification')
- {
- emailext body: '''Build is over..
-
- Regards,
- Mithun Technologies,
- 9980923226.''', subject: 'Build is over', to: 'devopstrainingblr@gmail.com'
- }
-}
+   stages {
+      stage('checkout'){
+         steps {
+            git credentialsId: '37b0305a-cf7c-4484-bf75-6001986b54b0', url: 'https://github.com/Thej17/maven-web-application.git'
+         }
+      }
+      stage('build'){
+         steps {
+          sh "/var/lib/jenkins/tools/hudson.tasks.Maven_MavenInstallation/maven3.3.3/bin/mvn clean package"         }
+      }
+      stage('sonarQube Analysis'){
+          steps {
+            sh "/var/lib/jenkins/tools/hudson.tasks.Maven_MavenInstallation/maven3.3.3/bin/mvn sonar:sonar"         }  
+      }
+      stage('nexus') {
+          steps {
+              sh "/var/lib/jenkins/tools/hudson.tasks.Maven_MavenInstallation/maven3.3.3/bin/mvn clean deploy"
+          }
+      }
+      stage('DeployAppIntoTomcat'){
+          steps {
+              sh "cp -r /var/lib/jenkins/workspace/newpipeline/target/*.war /opt/apache-tomcat-8.5.50/webapps/"
+          }
+      }
+   }
+              
+   }
